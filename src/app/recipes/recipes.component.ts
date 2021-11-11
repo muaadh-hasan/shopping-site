@@ -1,3 +1,4 @@
+import { Recipe } from './recipe.model';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -7,9 +8,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class RecipesComponent implements OnInit {
 
+  recipeFromList: Recipe;
+
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  selectedRecipe(recipe:Recipe){
+    console.log(recipe.name + "   recipes");
+    this.recipeFromList = recipe;
   }
 
 }
