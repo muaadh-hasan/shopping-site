@@ -12,7 +12,6 @@ export class AppComponent {
 
   onNavigate(page:string){
     this.pageSelected = page;
-
   }
 
 }
