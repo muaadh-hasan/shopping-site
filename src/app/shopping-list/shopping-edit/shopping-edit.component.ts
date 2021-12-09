@@ -1,36 +1,68 @@
+import { NgForm } from '@angular/forms';
+import { Subscription } from 'rxjs';
+
 import { ShoppingListService } from './../shopping-list.service';
 import { Ingredient } from './../../shared/ingredient.model';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-shopping-edit',
   templateUrl: './shopping-edit.component.html',
   styleUrls: ['./shopping-edit.component.css']
 })
-export class ShoppingEditComponent implements OnInit {
+export class ShoppingEditComponent implements OnInit , OnDestroy {
 
-  @ViewChild('nameInput') nameInputRef : ElementRef;
-  @ViewChild('amountInput') amountInputRef : ElementRef;
-
-
+@ViewChild('f') slForm:NgForm;
+  subscription : Subscription;
+  isEditing = false;
+  editItemIndex : number;
+  editedItem : Ingredient;
 
 
   constructor(private slService: ShoppingListService) {}
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
 
   ngOnInit(): void {
+    this.subscription = this.slService.startedEditing.subscribe(
+        (index:number) =>{
+          this.editItemIndex = index;
+          this.isEditing = true;
+          this.editedItem = this.slService.getIngredient(index);
+          this.slForm.setValue({
+              name:this.editedItem.name,
+              amount: this.editedItem.amount
+          });
+        }
+    );
   }
 
-  IngredientAdded(){
-    const name = this.nameInputRef.nativeElement.value;
-    const amount = this.amountInputRef.nativeElement.value;
+  IngredientAdded(form:NgForm){
+    const value = form.value;
+    const newIngredient = new Ingredient(value.name,value.amount);
 
-    console.log("recipe name is: " + this.nameInputRef.nativeElement.value );
-    console.log("recipe amount is: " + this.amountInputRef.nativeElement.value );
+    if(this.isEditing){
+      this.slService.UpdateIngredient(this.editItemIndex, newIngredient);
 
-    const newIngredient = new Ingredient(name,amount);
-
-    this.slService.addIngredients(newIngredient);
-
+      this.isEditing = false;
+    }else{
+      this.slService.addIngredients(newIngredient);
+    }
+    this.slForm.reset();
   }
 
+
+
+
+  onClear(){
+    this.slForm.reset();
+    this.isEditing = false;
+  }
+
+  onDelete(){
+    this.slService.deleteIngredient(this.editItemIndex);
+    this.onClear();
+  }
 }
